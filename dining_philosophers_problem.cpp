@@ -20,6 +20,8 @@ public:
     }
 };
 
+SpinLock cout_lock; // Globalna blokada dla wypisywania
+
 class Philosopher {
     const int id;
     const int total_philosophers;
@@ -28,12 +30,16 @@ class Philosopher {
     std::atomic<bool>& stop_flag;
 
     void think() {
-        std::cout << "Philosopher " << id << " is thinking...\n";
+        {
+            cout_lock.lock();
+            std::cout << "Philosopher " << id << " is thinking...\n";
+            cout_lock.unlock();
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     void eat() {
-        // Different fork acquisition order based on philosopher ID
+        // Różna kolejność pobierania widelców
         if (id % 2 == 0) {
             left_fork.lock();
             right_fork.lock();
@@ -42,11 +48,15 @@ class Philosopher {
             left_fork.lock();
         }
 
-        std::cout << "Philosopher " << id << " is eating (using forks "
-                  << id << " and " << (id + 1) % total_philosophers << ")\n";
+        {
+            cout_lock.lock();
+            std::cout << "Philosopher " << id << " is eating (using forks "
+                      << id << " and " << (id + 1) % total_philosophers << ")\n";
+            cout_lock.unlock();
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-        // Always unlock in reverse order
+        // Zwalnianie widelców w tej samej kolejności
         right_fork.unlock();
         left_fork.unlock();
     }
@@ -74,11 +84,11 @@ int main(int argc, char* argv[]) {
     std::atomic<bool> stop_flag(false);
     std::vector<std::thread> philosophers;
 
-    // Create philosopher threads
+    // Tworzenie wątków filozofów
     for (int i = 0; i < num_philosophers; ++i) {
         philosophers.emplace_back(
-            Philosopher(i, forks[i], forks[(i + 1) % num_philosophers], 
-            std::ref(stop_flag), num_philosophers)
+            Philosopher(i, forks[i], forks[(i + 1) % num_philosophers],
+                        std::ref(stop_flag), num_philosophers)
         );
     }
 
@@ -86,7 +96,7 @@ int main(int argc, char* argv[]) {
     std::cin.get();
     stop_flag.store(true, std::memory_order_relaxed);
 
-    // Cleanup threads
+    // Dołączanie wątków
     for (auto& t : philosophers) {
         t.join();
     }
