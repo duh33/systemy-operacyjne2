@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <string>
 
-// Custom SpinLock implementation (mutex replacement)
+// Custom SpinLock implementation
 class SpinLock {
     std::atomic_flag locked = ATOMIC_FLAG_INIT;
 public:
@@ -20,7 +20,7 @@ public:
     }
 };
 
-SpinLock cout_lock; // Globalna blokada dla wypisywania
+SpinLock cout_lock; // Global lock for synchronized console output
 
 class Philosopher {
     const int id;
@@ -39,7 +39,7 @@ class Philosopher {
     }
 
     void eat() {
-        // Różna kolejność pobierania widelców
+        // Fork acquisition order depends on philosopher ID (to prevent deadlock)
         if (id % 2 == 0) {
             left_fork.lock();
             right_fork.lock();
@@ -54,9 +54,10 @@ class Philosopher {
                       << id << " and " << (id + 1) % total_philosophers << ")\n";
             cout_lock.unlock();
         }
+
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-        // Zwalnianie widelców w tej samej kolejności
+        // Always unlock both forks (order is consistent here)
         right_fork.unlock();
         left_fork.unlock();
     }
@@ -79,12 +80,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const int num_philosophers = std::max(2, std::stoi(argv[1])); // Minimum 2 philosophers
+    const int num_philosophers = std::max(2, std::stoi(argv[1])); // At least 2 philosophers
     std::vector<SpinLock> forks(num_philosophers);
     std::atomic<bool> stop_flag(false);
     std::vector<std::thread> philosophers;
 
-    // Tworzenie wątków filozofów
+    // Create philosopher threads
     for (int i = 0; i < num_philosophers; ++i) {
         philosophers.emplace_back(
             Philosopher(i, forks[i], forks[(i + 1) % num_philosophers],
@@ -96,7 +97,7 @@ int main(int argc, char* argv[]) {
     std::cin.get();
     stop_flag.store(true, std::memory_order_relaxed);
 
-    // Dołączanie wątków
+    // Join all threads
     for (auto& t : philosophers) {
         t.join();
     }
