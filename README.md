@@ -1,4 +1,4 @@
-# Problem filozofów przy stole (Dining Philosophers)
+# Problem jedzących filozofów (Dining Philosophers problem)
 
 ## Opis
 
