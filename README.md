@@ -6,14 +6,9 @@ Ten projekt implementuje klasyczny problem synchronizacji w programowaniu wspó�
 
 ## Instrukcja uruchomienia
 
-1. **Kompilacja:**
+1. **Uruchomienie:**
    ```bash
-   g++ -std=c++17 -pthread dining_philosophers.cpp -o philosophers
-   ```
-
-2. **Uruchomienie:**
-   ```bash
-   ./philosophers <liczba_filozofów>
+   make run ARG=<liczba_filozofów>
    ```
 
 3. **Zatrzymanie symulacji:**
@@ -32,3 +27,7 @@ Ten projekt implementuje klasyczny problem synchronizacji w programowaniu wspó�
   
 - **Sekcja: Zakończenie działania wątków**
   - Rozwiązanie: Zmienna atomowa `stop_flag`, która jest sprawdzana w każdej iteracji pętli filozofa. Pozwala to na bezpieczne zatrzymanie programu bez przerywania wątków.
+
+## Autor
+Adrian Janicki, nr indeksu 272899  
+Politechnika Wrocławska
