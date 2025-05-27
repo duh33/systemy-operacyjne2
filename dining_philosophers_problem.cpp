@@ -1,73 +1,58 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <atomic>
 #include <chrono>
-#include <algorithm>
+#include <mutex>
 #include <string>
+#include <algorithm>
 
-// Custom SpinLock implementation
-class SpinLock {
-    std::atomic_flag locked = ATOMIC_FLAG_INIT;
-public:
-    void lock() {
-        while (locked.test_and_set(std::memory_order_acquire)) {
-            std::this_thread::yield(); // Reduce CPU contention
-        }
-    }
-    void unlock() {
-        locked.clear(std::memory_order_release);
-    }
-};
-
-SpinLock cout_lock; // Global lock for synchronized console output
+std::mutex cout_mutex; // Do synchronizacji wypisywania
+std::mutex stop_mutex; // Do ochrony flagi stopu
+bool stop_flag = false;
 
 class Philosopher {
     const int id;
     const int total_philosophers;
-    SpinLock& left_fork;
-    SpinLock& right_fork;
-    std::atomic<bool>& stop_flag;
+    std::mutex& left_fork;
+    std::mutex& right_fork;
+
+    void print(const std::string& msg) {
+        std::lock_guard<std::mutex> lock(cout_mutex);
+        std::cout << "Philosopher " << id << " " << msg << "\n";
+    }
 
     void think() {
-        {
-            cout_lock.lock();
-            std::cout << "Philosopher " << id << " is thinking...\n";
-            cout_lock.unlock();
-        }
+        print("is thinking...");
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     void eat() {
-        // Fork acquisition order depends on philosopher ID (to prevent deadlock)
+        // Aby uniknąć zakleszczenia, różne kolejności blokad
         if (id % 2 == 0) {
-            left_fork.lock();
-            right_fork.lock();
+            std::unique_lock<std::mutex> lock1(left_fork);
+            std::unique_lock<std::mutex> lock2(right_fork);
+            print("is eating (using forks " + std::to_string(id) +
+                  " and " + std::to_string((id + 1) % total_philosophers) + ")");
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         } else {
-            right_fork.lock();
-            left_fork.lock();
+            std::unique_lock<std::mutex> lock1(right_fork);
+            std::unique_lock<std::mutex> lock2(left_fork);
+            print("is eating (using forks " + std::to_string(id) +
+                  " and " + std::to_string((id + 1) % total_philosophers) + ")");
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
-
-        {
-            cout_lock.lock();
-            std::cout << "Philosopher " << id << " is eating (using forks "
-                      << id << " and " << (id + 1) % total_philosophers << ")\n";
-            cout_lock.unlock();
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-        // Always unlock both forks (order is consistent here)
-        right_fork.unlock();
-        left_fork.unlock();
     }
 
 public:
-    Philosopher(int id, SpinLock& left, SpinLock& right, std::atomic<bool>& stop, int total)
-        : id(id), total_philosophers(total), left_fork(left), right_fork(right), stop_flag(stop) {}
+    Philosopher(int id, std::mutex& left, std::mutex& right, int total)
+        : id(id), total_philosophers(total), left_fork(left), right_fork(right) {}
 
     void operator()() {
-        while (!stop_flag.load(std::memory_order_relaxed)) {
+        while (true) {
+            {
+                std::lock_guard<std::mutex> lock(stop_mutex);
+                if (stop_flag) break;
+            }
             think();
             eat();
         }
@@ -80,24 +65,25 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const int num_philosophers = std::max(2, std::stoi(argv[1])); // At least 2 philosophers
-    std::vector<SpinLock> forks(num_philosophers);
-    std::atomic<bool> stop_flag(false);
+    const int num_philosophers = std::max(2, std::stoi(argv[1]));
+    std::vector<std::mutex> forks(num_philosophers);
     std::vector<std::thread> philosophers;
 
-    // Create philosopher threads
+    // Tworzenie filozofów
     for (int i = 0; i < num_philosophers; ++i) {
         philosophers.emplace_back(
-            Philosopher(i, forks[i], forks[(i + 1) % num_philosophers],
-                        std::ref(stop_flag), num_philosophers)
+            Philosopher(i, forks[i], forks[(i + 1) % num_philosophers], num_philosophers)
         );
     }
 
     std::cout << "Press Enter to stop the simulation...\n";
     std::cin.get();
-    stop_flag.store(true, std::memory_order_relaxed);
 
-    // Join all threads
+    {
+        std::lock_guard<std::mutex> lock(stop_mutex);
+        stop_flag = true;
+    }
+
     for (auto& t : philosophers) {
         t.join();
     }
