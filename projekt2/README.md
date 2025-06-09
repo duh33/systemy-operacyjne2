@@ -6,16 +6,19 @@ Ten projekt implementuje prosty wielowątkowy serwer chatu. Serwer obsługuje wi
 
 ## Instrukcja uruchomienia
 1. **Budowanie:**
-W wierszu poleceń (np. *Developer Command Prompt for Visual Studio*) przejdź do katalogu z projektem i wpisz:
+   W wierszu poleceń (np. *Developer Command Prompt for Visual Studio*) przejdź do katalogu z projektem i wpisz:
 
    ```cmd
    nmake
+   ```
 
 2. **Uruchomienie:**
-W tym samym katalogu uruchom najpierw serwer:
+   W tym samym katalogu uruchom najpierw serwer:
    ```cmd
    server.exe
-Następnie w nowym oknie terminala uruchom jednego lub więcej klientów:
+   ```
+   
+   Następnie w nowym oknie terminala uruchom jednego lub więcej klientów:
    ```cmd
    client.exe
    ```
