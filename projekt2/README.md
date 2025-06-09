@@ -6,6 +6,15 @@ Ten projekt implementuje prosty wielowątkowy serwer chatu. Serwer obsługuje wi
 
 ## Instrukcja uruchomienia
 
+1. **Uruchomienie:**
+W katalogu z projektem wpisz w konsoli:
+   ```bash
+   server.exe
+   ```
+Następnie uruchom jeden lub więcej klientów:
+   ```bash
+   client.exe
+   ```
 
 ## Wątki
 
