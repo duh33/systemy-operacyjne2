@@ -15,7 +15,6 @@ W wierszu poleceń (np. *Developer Command Prompt for Visual Studio*) przejdź d
 W tym samym katalogu uruchom najpierw serwer:
    ```cmd
    server.exe
-   ```
 Następnie w nowym oknie terminala uruchom jednego lub więcej klientów:
    ```cmd
    client.exe
