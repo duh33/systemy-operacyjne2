@@ -7,6 +7,7 @@ Ten projekt implementuje prosty wielowątkowy serwer chatu. Serwer obsługuje wi
 ## Instrukcja uruchomienia
 
 1. **Uruchomienie:**
+
 W katalogu z projektem wpisz w konsoli:
    ```bash
    server.exe
