@@ -5,7 +5,6 @@
 Ten projekt implementuje prosty wielowątkowy serwer chatu. Serwer obsługuje wielu klientów jednocześnie, przydzielając każdemu klientowi osobny wątek do obsługi komunikacji. Celem jest efektywnej wymiany wiadomości pomiędzy klientami oraz synchronizacja dostępu do wspólnych zasobów.
 
 ## Instrukcja uruchomienia
-
 1. **Budowanie:**
 W wierszu poleceń (np. *Developer Command Prompt for Visual Studio*) przejdź do katalogu z projektem i wpisz:
 
