@@ -12,7 +12,6 @@ W wierszu poleceń (np. *Developer Command Prompt for Visual Studio*) przejdź d
    nmake
 
 2. **Uruchomienie:**
-
 W tym samym katalogu uruchom najpierw serwer:
    ```cmd
    server.exe
